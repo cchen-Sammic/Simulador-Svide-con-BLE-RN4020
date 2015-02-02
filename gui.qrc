@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/userInterface">
+        <file>gui_test.qml</file>
+    </qresource>
+    <qresource prefix="/iconos">
+        <file>imagenes/connect.png</file>
+        <file>imagenes/disconnect.png</file>
+        <file>imagenes/module_RN.png</file>
+        <file>imagenes/logo_sammic.png</file>
+        <file>imagenes/agua0.png</file>
+        <file>imagenes/agua1.png</file>
+        <file>imagenes/agua2.png</file>
+        <file>imagenes/agua3_ciclo.png</file>
+        <file>imagenes/agua3_pausa.png</file>
+        <file>imagenes/agua4_fin.png</file>
+        <file>imagenes/agua00_reposo.png</file>
+        <file>imagenes/agua3_ciclo2.png</file>
+    </qresource>
+</RCC>
