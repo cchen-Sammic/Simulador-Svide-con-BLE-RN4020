@@ -40,9 +40,10 @@ private:
     QString estadoSvide;
     int value_dialMin_set;
     int value_dialTemp_set;
-    int min_actual;
-    int temp_actual;
-    int segRestante_actual;
+    float min_actual;
+    int temp_aguaInicial;
+    float temp_actual;
+    float segRestante_actual;
     bool imagenMostrarAgua;
     int contarTiempoMostrar;
     bool comandoFinalizado;
@@ -64,6 +65,9 @@ private slots:
 
 private:
     void initActionsConnections();
+    QString tiempoCalentamientoToString(float tiempoRestante);
+    QString SET_tiempoCicloToString(int tiempoSet);
+    QString tiempoCicloToString(float tiempo);
 
 signals:
     void ordenCicloSvide();

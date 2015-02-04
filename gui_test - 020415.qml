@@ -10,12 +10,7 @@ Rectangle {
         property int temp_mostrar: 20 //actual
         property int tiempo_mostrar: 0 //actual
         property int tiempo_mostrar_seg:0
-        property string stringTiempo:"00' 00''";
-        property real porcentTemperatura
-        property real porcenttiempo
-        property string stringTempActual:"20.00"
-        property string stringTiemposSet:"0h 00'"
-        property int parpadear :0
+        property string  stringTiempo
 
 
 
@@ -37,7 +32,8 @@ Rectangle {
             ctx.reset();
             var centreX = width / 2;
             var centreY = height / 2 -10;
-            var pcAngulotemperatura = Math.PI*2*porcentTemperatura;
+            var pcAngulotemperatura = Math.PI*2*(temp_mostrar-20)/(angTemp_p-20) ;
+//             console.log(tiempo_mostrar+" " +angTiempo_p)
 //            console.log(angTemp_p)
 
             if(true){// circulo temperatura
@@ -77,13 +73,13 @@ Rectangle {
                 var angulofondo = Math.PI/180*2.5//* barra color
                 var angulofondo_f = angulofondo_i + angulofondo
                 var porcentColor
-//                console.log("%"+porcenttiempo*100+"  "+tiempo_mostrar+"  "+angTiempo_p)
-
                 if(tiempo_mostrar== 0 || angTiempo_p== 0){
                      porcentColor = 0
+                    stringTiempo = tiempo_mostrar_seg.toString() +" seg"
                 }
                 else{
-                     porcentColor = Math.PI*2/(anguloColor+angulofondo)*(1-porcenttiempo) //numero total de barras a mostrar
+                     porcentColor = Math.PI*2/(anguloColor+angulofondo)*(1-tiempo_mostrar/angTiempo_p)
+                    stringTiempo = tiempo_mostrar.toString()+" min"
                 }
                 for (var i=0; i<Math.PI*2/(anguloColor+angulofondo); i++){
                     ctx.beginPath();
@@ -99,21 +95,9 @@ Rectangle {
                         ctx.arc(centreX, centreY,width /3.6,anguloColor_f,anguloColor_f + angulofondo , false );
                         ctx.stroke();
                     }
-                    if(i>porcentColor-1 && i<porcentColor){ //ultima barra
+                    if(i>porcentColor-1 && i<porcentColor){
                         ctx.beginPath();
-                        if(parpadear <=5){
-                            ctx.strokeStyle = 'white'
-                            parpadear = parpadear +1
-                        }
-                        else if(parpadear>5 && parpadear<=10){
-                            ctx.strokeStyle = 'rgb(40,40, 45)'
-                            parpadear = parpadear +1
-                        }
-                        else if(parpadear>10){
-                            ctx.strokeStyle = 'white'
-                            parpadear = 0
-                        }
-
+                        ctx.strokeStyle = 'yellow'
                         ctx.lineWidth = 18;
                         ctx.arc(centreX, centreY,width /3.6,anguloColor_f,anguloColor_f+angulofondo , false );
                         ctx.stroke();
@@ -143,7 +127,7 @@ Rectangle {
         }
 
         Timer {
-            interval: 100;
+            interval: 1000;
             repeat: true;
             running: true;
             onTriggered: {
@@ -182,18 +166,34 @@ Rectangle {
         Text {
             id: text_tiempo_set
             x: 303
-            y: 387
+            y: 386
             width: 106
             height: 42
             color: "#5a5858"
-            text:qsTr(stringTiemposSet);
-//            text: qsTr((angTiempo_p).toString())
+            text: qsTr((angTiempo_p).toString())
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignBottom
-            font.pointSize: 22
+            font.pointSize: 23
             font.family: "Waseem"
             style: Text.Normal
             font.bold: false
+
+            Text {
+                id: text_min
+                x: 75
+                y: 13
+                width: 31
+                height: 23
+                color: "#5a5858"
+                text: qsTr("min")
+                font.italic: true
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignBottom
+                font.pixelSize: 12
+                font.family: "Waseem"
+                style: Text.Normal
+                font.bold: true
+            }
         }
 
         Text {
@@ -203,8 +203,7 @@ Rectangle {
             width: 64
             height: 26
             color: "#bd0f0f"
-            text: qsTr(stringTempActual+" ºC")
-            //text: qsTr(temp_mostrar.toString()+" ºC")
+            text: qsTr(temp_mostrar.toString()+" ºC")
             verticalAlignment: Text.AlignBottom
             horizontalAlignment: Text.AlignHCenter
             font.pixelSize: 35
@@ -223,20 +222,6 @@ Rectangle {
             horizontalAlignment: Text.AlignHCenter
             font.pixelSize: 35
             font.family: "Droid"
-        }
-
-        Text {
-            id: textSET
-            x: 185
-            y: 395
-            width: 71
-            height: 28
-            color: "#BFBFBF"
-            text: qsTr("SET")
-            font.pointSize: 23
-            font.family: "Waseem"
-            style: Text.Normal
-            font.bold: false
         }
 
     }

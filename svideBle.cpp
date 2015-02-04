@@ -5,7 +5,7 @@ svideBle::svideBle (QObject *parent)
     : QObject(parent)
 {
     UUID_servicio ="53346d6d3163424c4573337276316365";//Set private service UUID 'S4mm1cBLEs3rv1ce'
-    UUID_EscrituraLectura="53346d6d3163424c45657363726c6563,0A,05";//0A:Read/Write 'S4mm1cBLEescrlec'
+    UUID_EscrituraLectura="53346d6d3163424c45657363726c6563,18,05";//0A:Read/Write 'S4mm1cBLEescrlec'
     UUID_Notificacion="53346d6d3163424c456e6f7479666963,10,06";//10:Notify 'S4mm1cBLEnotyfic'
     estado_info = "reposo";
 

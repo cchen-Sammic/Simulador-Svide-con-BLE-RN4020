@@ -24,7 +24,9 @@ MainWindow::MainWindow(QWidget *parent) :
     dataSerial = "";
     min_actual = 0;
     segRestante_actual = 0;
-    temp_actual = 20;
+    temp_aguaInicial = 20;
+    temp_actual = temp_aguaInicial;
+//    temp_actual = 20;
     contarTiempoMostrar=0; ///para enviar tiempo actual al GUI
     comandoFinalizado=false;
 
@@ -132,18 +134,13 @@ void MainWindow :: onSerialRead(){
                 //ENVIO DE ORDEN A SVIDE
                 Svide->characterOrdenCiclo(dataOrden);
                 if(estadoSvide=="reposo"){
-//                    ui->dial_min->setValue(Svide->orden_tiempoCiclo);
-//                    ui->dial_temp->setValue(Svide->orden_tempAgua);
                     ui->dial_min->setValue(Svide->orden_tiempoCiclo);
                     ui->dial_temp->setValue(Svide->orden_tempAgua);
                     ui->label_ordenCiclo->setText(Svide->label_orden);
                     emit ordenCicloSvide();
                     ui->button_svideStart->clicked();
 
-
-//                    ui->button_svideStart->clicked();
                 }
-//                qDebug()<<"orden:"<<dataOrden;
             }
             dataSerial=""; //BORRAR  VALORES  VECTOR   DATASERIAL
         }
@@ -163,6 +160,8 @@ void MainWindow::onSerialWrite(){
 //![5] Dial Minuto
 void MainWindow::valueChangedDialMin(){
     value_dialMin_set = ui->dial_min->value();
+    QString tiempoSet = SET_tiempoCicloToString(value_dialMin_set);
+    m_currentRootObject->setProperty("stringTiemposSet",tiempoSet);
     m_currentRootObject->setProperty("angTiempo_p", value_dialMin_set);
 }
 //![6] Dial Temperatura
@@ -238,15 +237,15 @@ void MainWindow::onStartBotonTermocirculador(){
     if(estadoSvide=="reposo"){
         //        value_dialTemp_set = ui->dial_temp->value();
         estadoSvide="calentando";
-        timer_termocirculador->start(1000);
+        timer_termocirculador->start(150);
         imagenMostrarAgua =true;
         //         m_currentRootObject->setProperty("onCiclo",false);
     }
     else if(estadoSvide=="calentamientoTerminado"){
         estadoSvide="ciclo";
         ui->label_imagIntro->setPixmap(QPixmap(":/iconos/imagenes/agua3_ciclo.png"));
-        timer_termocirculador->start(1000);
-        //         m_currentRootObject->setProperty("onCiclo",true);
+        timer_termocirculador->start(200);
+        m_currentRootObject->setProperty("tiempo_mostrar",1);
     }
     else if(estadoSvide=="ciclo"){
         estadoSvide="pausa";
@@ -255,15 +254,17 @@ void MainWindow::onStartBotonTermocirculador(){
     else if(estadoSvide=="pausa"){
         estadoSvide="ciclo";
         ui->label_imagIntro->setPixmap(QPixmap(":/iconos/imagenes/agua3_ciclo.png"));
-        timer_termocirculador->start(1000);
+        timer_termocirculador->start(200);
+        m_currentRootObject->setProperty("tiempo_mostrar",1);
     }
     else if(estadoSvide=="completado"){
         estadoSvide="reposo";
-        //         m_currentRootObject->setProperty("onCiclo",false);
+        m_currentRootObject->setProperty("tiempo_mostrar",0);
         ui->label_imagIntro->setPixmap(QPixmap(":/iconos/imagenes/agua00_reposo.png"));
         Svide->estado_info= estadoSvide;
         ui->label_ordenCiclo->setText("Orden para Svide\n\nagua set: ---\nsonda set: ---\ntiempo set: ---");
-        temp_actual = 20;
+        temp_actual = temp_aguaInicial;
+        // temp_actual = 20;
         min_actual = 0;
         ui->label_ordenCiclo->setText("Orden para Svide\n\nagua set: ---\nsonda set: ---\ntiempo set: ---");
 
@@ -275,8 +276,8 @@ void MainWindow::update_termocirculador(){
     if(estadoSvide=="reposo"){
     }
     else if(estadoSvide =="calentando"){
-        temp_actual = temp_actual + 1; //ACTUALIZACION   TEMP
-        segRestante_actual = (timer_termocirculador->interval())/1000*(value_dialTemp_set-temp_actual);//ACTUALIZACION TIEMPO RESTANTE CALENTAMIENTO
+        temp_actual = temp_actual + 0.2; //ACTUALIZACION   TEMP
+        segRestante_actual = (value_dialTemp_set-temp_actual);//(timer_termocirculador->interval())/1000*(value_dialTemp_set-temp_actual);//ACTUALIZACION TIEMPO RESTANTE CALENTAMIENTO
         //ALTERNAR   IMAGEN agua0 calentando
         if(imagenMostrarAgua){
             ui->label_imagIntro->setPixmap(QPixmap(":/iconos/imagenes/agua0.png"));
@@ -294,12 +295,18 @@ void MainWindow::update_termocirculador(){
             ui->label_imagIntro->setPixmap(QPixmap(":/iconos/imagenes/agua2.png"));
             timer_termocirculador->stop();
         }
+        QString stringTiempoCalentamiento =tiempoCalentamientoToString(segRestante_actual);
+        m_currentRootObject->setProperty("stringTiempo",stringTiempoCalentamiento);
+        float porcentTemp = float(temp_actual-temp_aguaInicial)/float(value_dialTemp_set-temp_aguaInicial);
+        QString stringTemp =QString::number(temp_actual,'f',2);
+        m_currentRootObject->setProperty("porcentTemperatura",porcentTemp);
+        m_currentRootObject->setProperty("stringTempActual",stringTemp);
         m_currentRootObject->setProperty("temp_mostrar", temp_actual);
-        m_currentRootObject->setProperty("tiempo_mostrar_seg",segRestante_actual);
+
     }
     else if(estadoSvide =="ciclo"){
         if(contarTiempoMostrar == 0){
-            min_actual = min_actual + 1;
+            min_actual = min_actual + 0.2;
             contarTiempoMostrar = contarTiempoMostrar+1;
             ui->label_imagIntro->setPixmap(QPixmap(":/iconos/imagenes/agua3_ciclo.png"));
             if(min_actual>= value_dialMin_set){ //COMPLETADO
@@ -310,14 +317,23 @@ void MainWindow::update_termocirculador(){
             }
         }
         else if(contarTiempoMostrar!=0){
+            min_actual = min_actual + 0.2;
             contarTiempoMostrar = contarTiempoMostrar +1;
             ui->label_imagIntro->setPixmap(QPixmap(":/iconos/imagenes/agua3_ciclo2.png"));
-            if(contarTiempoMostrar==2){ //TIEMPO   SEGUNDOS   MUERTOS
+            if(min_actual>= value_dialMin_set){ //COMPLETADO
+                min_actual =  ui->dial_min->value();
+                estadoSvide ="completado";
+                ui->label_imagIntro->setPixmap(QPixmap(":/iconos/imagenes/agua4_fin.png"));
+                timer_termocirculador->stop();
+            }
+            if(contarTiempoMostrar==10){ //TIEMPO   SEGUNDOS   MUERTOS
                 contarTiempoMostrar=0;
             }
         }
-        //                qDebug()<<"contartiempo:"<<contarTiempoMostrar;
-        m_currentRootObject->setProperty("tiempo_mostrar",min_actual);
+        QString conversionTiempoCiclo = tiempoCicloToString(min_actual);
+        m_currentRootObject->setProperty("stringTiempo",conversionTiempoCiclo);
+        float porcenttiempo = min_actual/value_dialMin_set;
+        m_currentRootObject->setProperty("porcenttiempo",porcenttiempo);
     }
     else if(estadoSvide=="pausa"){
         timer_termocirculador->stop();
@@ -327,7 +343,54 @@ void MainWindow::update_termocirculador(){
     Svide->estado_tempAgua = temp_actual;
     Svide->estado_tiempo_ciclo = min_actual;
     Svide->estado_tiempo_calentamiento = segRestante_actual;
-    //      qDebug()<<estadoSvide<<"\ttemperatura actual:"<<temp_actual<<"ºC\ttiempo transcurrido:"<<min_actual<<"min";
-    //    qDebug()<<Svide->characterEstado();
+
+}
+//![10] Conversion segundos de calentamiento a formato 00' 00"
+QString MainWindow::tiempoCalentamientoToString(float tiempoRestante){
+   float conversionTiempo = tiempoRestante * 5;  // TIEMPO FICTICIO
+   int min = int(conversionTiempo)/60;
+   int seg = int(conversionTiempo)%60;
+   QString stringMin = QString::number(min);
+   QString stringSeg = QString::number(seg);
+   if(min<10){
+       stringMin= "0" + stringMin;
+   }
+   if(seg<10){
+       stringSeg = "0" + stringSeg;
+   }
+   QString composicionTiempo = stringMin+"' "+stringSeg+"''";
+   return composicionTiempo;
+}
+//![11] Conversion minutos set ciclo a formato 0h 00'
+QString MainWindow::SET_tiempoCicloToString(int tiempoSet){
+    int hora = tiempoSet/60;
+    int min = tiempoSet%60;
+    QString stringHora = QString::number(hora);
+    QString stringMin = QString::number(min);
+//    if(hora<10){
+//        stringHora= "0" + stringHora;
+//    }
+    if(min<10){
+        stringMin = "0" + stringMin;
+    }
+    QString composicionTiempo = stringHora+"h "+stringMin+"'";
+    return composicionTiempo;
 }
 
+//![12] Conversion tiempo ciclo a formato 0h 00' 00"
+QString MainWindow::tiempoCicloToString(float tiempo){
+    int hora = tiempo/60;
+    int min = int(tiempo)%60;
+    int seg = (tiempo - int(tiempo))*60;
+    QString stringHora = QString::number(hora);
+    QString stringMin = QString::number(min);
+    QString stringSeg = QString::number(seg);
+    if(min<10){
+        stringMin= "0" + stringMin;
+    }
+    if(seg<10){
+        stringSeg = "0" + stringSeg;
+    }
+    QString composicionTiempo = stringHora+"h "+stringMin+"' " + stringSeg+"''";
+    return composicionTiempo;
+}
