@@ -44,12 +44,10 @@ MainWindow::MainWindow(QWidget *parent) :
     QUrl source("qrc:userInterface/gui_test.qml");
     ui->guiSVide->setSource(source);
     m_currentRootObject = ui->guiSVide->rootObject();
-    //    qDebug()<<m_currentRootObject;
 
     serial = new QSerialPort(this);
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()){
         ui->portBox->addItem(info.portName());
-        //        qDebug()<<info.portName();
     }
     ui->portBox->setCurrentIndex(ui->portBox->count()-1); //ui->portBox->count()-1
 
@@ -120,30 +118,31 @@ void MainWindow :: openSerialPort()
 void MainWindow :: onSerialRead(){
     if (serial->bytesAvailable()) {//bytesAvailable
         ui->consola->setTextColor("grey");
-        QByteArray data;
+        dataSerial="";
+        int contar_tiempo = 0;
+        while (contar_tiempo != 100){
+            QByteArray data;
             data = serial->readAll();
             dataSerial.append(data);
-        if(dataSerial.contains("#")){
+            contar_tiempo= contar_tiempo+1;
+        }
+//        if(dataSerial.contains("#")){
             ui->consola->insertPlainText(QString(dataSerial));
-            qDebug()<<dataSerial;
-//            qDebug()<<"longitud dato:"<<dataSerial.length();
             ui->consola->moveCursor(QTextCursor::End);
             ui->consola->setTextColor("black");
-            if(dataSerial.contains("WV")){
-                QByteArray dataOrden = dataSerial.mid(8,10);
-                //ENVIO DE ORDEN A SVIDE
-                Svide->characterOrdenCiclo(dataOrden);
-                if(estadoSvide=="reposo"){
-                    ui->dial_min->setValue(Svide->orden_tiempoCiclo);
-                    ui->dial_temp->setValue(Svide->orden_tempAgua);
-                    ui->label_ordenCiclo->setText(Svide->label_orden);
-                    emit ordenCicloSvide();
-                    ui->button_svideStart->clicked();
-
-                }
-            }
-            dataSerial=""; //BORRAR  VALORES  VECTOR   DATASERIAL
-        }
+//            if(dataSerial.contains("WV")){
+//                QByteArray dataOrden = dataSerial.mid(8,10);
+//                //ENVIO DE ORDEN A SVIDE
+//                Svide->characterOrdenCiclo(dataOrden);
+//                if(estadoSvide=="reposo"){
+//                    ui->dial_min->setValue(Svide->orden_tiempoCiclo);
+//                    ui->dial_temp->setValue(Svide->orden_tempAgua);
+//                    ui->label_ordenCiclo->setText(Svide->label_orden);
+//                    emit ordenCicloSvide();
+//                    ui->button_svideStart->clicked();
+//                }
+//            dataSerial=""; //BORRAR  VALORES  VECTOR   DATASERIAL
+//        }
     }
 }
 //![4] Serial Write
@@ -151,7 +150,9 @@ void MainWindow::onSerialWrite(){
     if (serial->isOpen() && !ui->comando->text().isEmpty()){
         QString writeDatos = QString("\n[%1").arg(numComandoIntro)+"]: "+QString(ui->comando->text())+"\n";
         ui->consola->insertPlainText(writeDatos);
-        serial->write(QByteArray(ui->comando->text().toLatin1()));//toLocal8Bit
+        QByteArray datosEnviar = ui->comando->text().toLocal8Bit();
+        datosEnviar = datosEnviar+"\n";
+        serial->write(datosEnviar);//toLocal8Bit   toLatin1
         //        qDebug()<<writeDatos;
         ui->comando->clear();
         numComandoIntro ++;
@@ -174,7 +175,7 @@ void MainWindow::initBLEconfig(){
     ui->button_bleconfig->setStyleSheet("background-color:rgb(168, 255, 53);");
     ui->consola->setTextColor("blue");
     ui->consola->insertPlainText("** Iniciando configuración RN4020 de Sammic: **\n");
-    timer_BLEconfig->start(2000);
+    timer_BLEconfig->start(400);
 }
 //![7] update BLE config
 void MainWindow::update_initBLEconfig(){
@@ -184,8 +185,9 @@ void MainWindow::update_initBLEconfig(){
     comando = Svide->preConfigBleSammic(numBLEConfig);
 
     if(comandoFinalizado==false){
-        serial->write(comando.toLatin1());
-        comando = "-> "+comando+"\n";
+        comando = comando+"\n";
+        serial->write(comando.toLocal8Bit());
+        comando = "-> "+comando;
         qDebug()<<comando;
         ui->consola->insertPlainText(comando);
         if (comando=="-> R,1\n"){
@@ -210,7 +212,7 @@ void MainWindow::BLEnotify(){
         ui->button_blenotify->setStyleSheet("background-color:rgb(255, 178, 102);");
         ui->button_blenotify->setDefault(true);
         //        qDebug()<<ui->button_blenotify->isDefault();
-        timer_BLEnotificacion->start(2000);
+        timer_BLEnotificacion->start(1000);
     }
     else if(ui->button_blenotify->isDefault()){
         ui->button_blenotify->setStyleSheet("");
