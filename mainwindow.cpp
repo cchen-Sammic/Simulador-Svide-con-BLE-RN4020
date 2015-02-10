@@ -118,21 +118,35 @@ void MainWindow :: openSerialPort()
 void MainWindow :: onSerialRead(){
     if (serial->bytesAvailable()) {//bytesAvailable
         ui->consola->setTextColor("grey");
-        dataSerial="";
-        int contar_tiempo = 0;
-        while (contar_tiempo != 100){
-            QByteArray data;
-            data = serial->readAll();
-            dataSerial.append(data);
-            contar_tiempo= contar_tiempo+1;
+        bool datoCorrecto = false;
+        QByteArray data;
+        data = serial->readAll();
+//        qDebug()<<data;
+        dataSerial.append(data);
+        if(dataSerial.contains(("WV"))){
+//            data = serial->readAll();
+//            dataSerial.append(data);
+
+//            if(dataSerial.contains(".")){
+//                qDebug()<<"."<<dataSerial;
+//                datoCorrecto = true;}
+            if(dataSerial.length()>50){
+               qDebug()<<"50:"<<dataSerial;
+                datoCorrecto = true;}
         }
-//        if(dataSerial.contains("#")){
-            ui->consola->insertPlainText(QString(dataSerial));
-            ui->consola->moveCursor(QTextCursor::End);
-            ui->consola->setTextColor("black");
-//            if(dataSerial.contains("WV")){
+
+            if(datoCorrecto){
+                ui->consola->insertPlainText(QString(dataSerial));
+                ui->consola->moveCursor(QTextCursor::End);
+                ui->consola->setTextColor("black");
+                if(dataSerial.contains("WV")){
+                    int longSerial = dataSerial.length();
+                    QByteArray dataInfo = dataSerial.mid(8,longSerial-2);
+//                    qDebug()<<longSerial<<dataInfo;
+                    dataSerial= "";
+                }
 //                QByteArray dataOrden = dataSerial.mid(8,10);
-//                //ENVIO DE ORDEN A SVIDE
+                //ENVIO DE ORDEN A SVIDE
 //                Svide->characterOrdenCiclo(dataOrden);
 //                if(estadoSvide=="reposo"){
 //                    ui->dial_min->setValue(Svide->orden_tiempoCiclo);
@@ -142,7 +156,7 @@ void MainWindow :: onSerialRead(){
 //                    ui->button_svideStart->clicked();
 //                }
 //            dataSerial=""; //BORRAR  VALORES  VECTOR   DATASERIAL
-//        }
+        }
     }
 }
 //![4] Serial Write
@@ -175,7 +189,7 @@ void MainWindow::initBLEconfig(){
     ui->button_bleconfig->setStyleSheet("background-color:rgb(168, 255, 53);");
     ui->consola->setTextColor("blue");
     ui->consola->insertPlainText("** Iniciando configuración RN4020 de Sammic: **\n");
-    timer_BLEconfig->start(400);
+    timer_BLEconfig->start(100);
 }
 //![7] update BLE config
 void MainWindow::update_initBLEconfig(){

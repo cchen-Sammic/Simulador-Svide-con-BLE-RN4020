@@ -8,6 +8,7 @@ svideBle::svideBle (QObject *parent)
     UUID_EscrituraLectura="53346d6d3163424c45657363726c6563,0A,20";//0A:Read/Write 'S4mm1cBLEescrlec'
     UUID_Notificacion="53346d6d3163424c456e6f7479666963,12,20";//12:Notify/Read  'S4mm1cBLEnotyfic'
     UUID_Respuesta="c16d9da6ac7211e4bd9600219b72a3cf,12,20"; //12:Notity/Read
+    UUID_Respuesta2 = "63773fe2aaea11e4bef600219b72a3cf,12,20"; //12:Notity/Read
     estado_info = "reposo";
 
     orden_tempAgua=0;
@@ -77,13 +78,13 @@ QString svideBle::preConfigBleSammic(int pos_Ble){
     QString _comando;
     switch(pos_Ble){
     case 1:
-        _comando = "SF,1"; //factory reset
+        _comando = "SF,2"; //factory reset
         break;
     case 2:
-       _comando ="SR,20006000";//auto-advertise, IOS mode
+       _comando ="SR,24006000";//auto-advertise, IOS mode, server only
         break;
     case 3:
-        _comando = "SS,80000001"; //Enable private service support, device information support
+        _comando = "SS,00000001"; //Enable private service support
         break;
     case 4:
         _comando = "PZ"; //clear the current private service and characteristics
@@ -98,12 +99,15 @@ QString svideBle::preConfigBleSammic(int pos_Ble){
         _comando = "PC,"+UUID_Notificacion;//53346d6d3163424c456e6f7479666963,10,02";//Notify
         break;
     case 8:
-        _comando = "PC,"+UUID_Respuesta;
+        _comando = "PC,"+UUID_Respuesta;//c16d9da6ac7211e4bd9600219b72a3cf,12,20
         break;
     case 9:
-          _comando = "S-,SVIDE"; //serialized name SVIDE_xxxx
-          break;
+        _comando = "PC,"+UUID_Respuesta2;//63773fe2aaea11e4bef600219b72a3cf,12,14
+        break;
     case 10:
+          _comando = "SN,SViDe_00"; //serialized name SVIDE_xxxx
+          break;
+    case 11:
         _comando ="R,1"; //Reboot
         break;
     default:

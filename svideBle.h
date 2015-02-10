@@ -21,6 +21,7 @@ public:
     QString UUID_Notificacion;
     QString UUID_EscrituraLectura;
     QString UUID_Respuesta;
+    QString UUID_Respuesta2;
 
 /*BLE caractristica para Estado*/
     QString estado_info;
