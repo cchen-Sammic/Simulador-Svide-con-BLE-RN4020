@@ -8,7 +8,7 @@ svideBle::svideBle (QObject *parent)
     UUID_EscrituraLectura="53346d6d3163424c45657363726c6563,0A,20";//0A:Read/Write 'S4mm1cBLEescrlec'
     UUID_Notificacion="53346d6d3163424c456e6f7479666963,12,20";//12:Notify/Read  'S4mm1cBLEnotyfic'
     UUID_Respuesta="c16d9da6ac7211e4bd9600219b72a3cf,12,20"; //12:Notity/Read
-    UUID_Respuesta2 = "63773fe2aaea11e4bef600219b72a3cf,12,20"; //12:Notity/Read
+    UUID_Sistema = "63773fe2aaea11e4bef600219b72a3cf,12,20"; //12:Notity/Read
     estado_info = "reposo";
 
     orden_tempAgua=0;
@@ -102,7 +102,7 @@ QString svideBle::preConfigBleSammic(int pos_Ble){
         _comando = "PC,"+UUID_Respuesta;//c16d9da6ac7211e4bd9600219b72a3cf,12,20
         break;
     case 9:
-        _comando = "PC,"+UUID_Respuesta2;//63773fe2aaea11e4bef600219b72a3cf,12,14
+        _comando = "PC,"+UUID_Sistema;//63773fe2aaea11e4bef600219b72a3cf,12,14
         break;
     case 10:
           _comando = "SN,SViDe_00"; //serialized name SVIDE_xxxx

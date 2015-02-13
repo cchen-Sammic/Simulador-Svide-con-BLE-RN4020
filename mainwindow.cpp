@@ -117,28 +117,29 @@ void MainWindow :: openSerialPort()
 //![3] Serial Read
 void MainWindow :: onSerialRead(){
     if (serial->bytesAvailable()) {//bytesAvailable
-        ui->consola->setTextColor("grey");
         bool datoCorrecto = false;
         QByteArray data;
         data = serial->readAll();
+
 //        qDebug()<<data;
         dataSerial.append(data);
-        if(dataSerial.contains(("WV"))){
-//            data = serial->readAll();
-//            dataSerial.append(data);
+        ui->consola->setTextColor("grey");
+        ui->consola->insertPlainText(QString(dataSerial));
+        ui->consola->moveCursor(QTextCursor::End);
 
-//            if(dataSerial.contains(".")){
-//                qDebug()<<"."<<dataSerial;
-//                datoCorrecto = true;}
-            if(dataSerial.length()>50){
-               qDebug()<<"50:"<<dataSerial;
-                datoCorrecto = true;}
+        if(dataSerial.contains(("WV,"))){
+            int posWV= dataSerial.lastIndexOf("WV,");
+            int pospunto =  dataSerial.lastIndexOf(".");
+            qDebug()<<dataSerial;
+            QByteArray datoenciado = dataSerial.mid(posWV+8,pospunto -posWV-8);
+            qDebug()<<posWV<<pospunto<<datoenciado;
+            dataSerial= "";
         }
 
             if(datoCorrecto){
-                ui->consola->insertPlainText(QString(dataSerial));
-                ui->consola->moveCursor(QTextCursor::End);
-                ui->consola->setTextColor("black");
+//                ui->consola->insertPlainText(QString(dataSerial));
+//                ui->consola->moveCursor(QTextCursor::End);
+//                ui->consola->setTextColor("black");
                 if(dataSerial.contains("WV")){
                     int longSerial = dataSerial.length();
                     QByteArray dataInfo = dataSerial.mid(8,longSerial-2);
