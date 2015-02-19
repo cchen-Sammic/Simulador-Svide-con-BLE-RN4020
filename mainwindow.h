@@ -26,6 +26,8 @@ private:
     QSerialPort *serial;
     QString datosSerial;
     QByteArray dataSerial;
+    QByteArray dataTemporal;
+    QByteArray datorecibido;
     QObject *m_currentRootObject;
     QString text ;
     QString inString;
@@ -35,6 +37,8 @@ private:
     QString Ble_servicio;
     QString Ble_notificacion;
     QString Ble_escLect;
+    QString Ble_respuesta;
+    QString Ble_sistema;
     QTimer *timer_BLEnotificacion;
     QTimer *timer_termocirculador;
     QString estadoSvide;
@@ -47,6 +51,7 @@ private:
     bool imagenMostrarAgua;
     int contarTiempoMostrar;
     bool comandoFinalizado;
+    bool modoComando;
 
 
 private slots:
@@ -62,6 +67,9 @@ private slots:
     void BLEnotify();
     void update_BLEnotify();
     void update_termocirculador();
+    void singleShotReset();
+    void singleShotReset2();
+    void interpretarOrden();
 
 private:
     void initActionsConnections();
@@ -71,6 +79,7 @@ private:
 
 signals:
     void ordenCicloSvide();
+    void nuevoOrdenRecibido();
 
 
 

@@ -453,9 +453,9 @@ font: 75 10pt &quot;Papyrus&quot;;</string>
     <property name="geometry">
      <rect>
       <x>100</x>
-      <y>520</y>
+      <y>510</y>
       <width>261</width>
-      <height>34</height>
+      <height>61</height>
      </rect>
     </property>
     <property name="font">
@@ -489,7 +489,7 @@ font: 75 10pt &quot;Papyrus&quot;;</string>
     <property name="geometry">
      <rect>
       <x>110</x>
-      <y>505</y>
+      <y>498</y>
       <width>171</width>
       <height>16</height>
      </rect>

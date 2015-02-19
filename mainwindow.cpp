@@ -26,16 +26,21 @@ MainWindow::MainWindow(QWidget *parent) :
     segRestante_actual = 0;
     temp_aguaInicial = 20;
     temp_actual = temp_aguaInicial;
-//    temp_actual = 20;
+    //    temp_actual = 20;
     contarTiempoMostrar=0; ///para enviar tiempo actual al GUI
     comandoFinalizado=false;
+    modoComando= false;
 
     ui->button_blenotify->setDefault(false);
     Ble_servicio = Svide->UUID_servicio;
     Ble_notificacion = Svide->UUID_Notificacion;
     Ble_escLect = Svide->UUID_EscrituraLectura;
+    Ble_respuesta = Svide->UUID_Respuesta;
+    Ble_sistema = Svide->UUID_Sistema;
     ui->show_UUID->insertPlainText("R/W: "+Ble_escLect+"\n");
-    ui->show_UUID->insertPlainText("Notif: "+Ble_notificacion);
+    ui->show_UUID->insertPlainText("Notificación: "+Ble_notificacion+"\n");
+    ui->show_UUID->insertPlainText("Respuesta: "+Ble_respuesta+"\n");
+    ui->show_UUID->insertPlainText("Sistemema: "+Ble_sistema);
 
     numComandoIntro =1;  //COMANDOS   introducidos
     numBLEConfig =0;  //CONTADOR  para configuración BLE Servicios/Características Sammic
@@ -87,6 +92,8 @@ void MainWindow :: initActionsConnections(){
     timer_termocirculador->stop();
     connect(this,SIGNAL(ordenCicloSvide()),this,SLOT(valueChangedDialTemp()));
     connect(this,SIGNAL(ordenCicloSvide()),this, SLOT(valueChangedDialMin()));
+
+    connect(this, SIGNAL(nuevoOrdenRecibido()),this, SLOT(interpretarOrden()));
 }
 //![2] Serial Port
 void MainWindow :: openSerialPort()
@@ -118,59 +125,51 @@ void MainWindow :: openSerialPort()
 void MainWindow :: onSerialRead(){
     if (serial->bytesAvailable()) {//bytesAvailable
         bool datoCorrecto = false;
+        if(modoComando==false){
+            QTimer::singleShot(20,this, SLOT(singleShotReset()));
+        }
+        else if(modoComando==true){
+            dataSerial.clear();
+        }
         QByteArray data;
+
         data = serial->readAll();
 
-//        qDebug()<<data;
         dataSerial.append(data);
         ui->consola->setTextColor("grey");
         ui->consola->insertPlainText(QString(dataSerial));
         ui->consola->moveCursor(QTextCursor::End);
 
+
         if(dataSerial.contains(("WV,"))){
             int posWV= dataSerial.lastIndexOf("WV,");
             int pospunto =  dataSerial.lastIndexOf(".");
-            qDebug()<<dataSerial;
-            QByteArray datoenciado = dataSerial.mid(posWV+8,pospunto -posWV-8);
-            qDebug()<<posWV<<pospunto<<datoenciado;
-            dataSerial= "";
+            datorecibido = dataSerial.mid(posWV+8,pospunto -posWV-8);
+//            qDebug()<<posWV<<pospunto<<datorecibido<<datorecibido.length();
+            datoCorrecto = true;
         }
-
-            if(datoCorrecto){
-//                ui->consola->insertPlainText(QString(dataSerial));
-//                ui->consola->moveCursor(QTextCursor::End);
-//                ui->consola->setTextColor("black");
-                if(dataSerial.contains("WV")){
-                    int longSerial = dataSerial.length();
-                    QByteArray dataInfo = dataSerial.mid(8,longSerial-2);
-//                    qDebug()<<longSerial<<dataInfo;
-                    dataSerial= "";
-                }
-//                QByteArray dataOrden = dataSerial.mid(8,10);
-                //ENVIO DE ORDEN A SVIDE
-//                Svide->characterOrdenCiclo(dataOrden);
-//                if(estadoSvide=="reposo"){
-//                    ui->dial_min->setValue(Svide->orden_tiempoCiclo);
-//                    ui->dial_temp->setValue(Svide->orden_tempAgua);
-//                    ui->label_ordenCiclo->setText(Svide->label_orden);
-//                    emit ordenCicloSvide();
-//                    ui->button_svideStart->clicked();
-//                }
-//            dataSerial=""; //BORRAR  VALORES  VECTOR   DATASERIAL
+        if(datoCorrecto){
+            ui->consola->setTextColor("blue");
+            ui->consola->insertPlainText(QString(datorecibido+"        %1\n").arg(datorecibido.length()));
+            ui->consola->moveCursor(QTextCursor::End);
+            emit nuevoOrdenRecibido();
+//            ui->consola->setTextColor("black");
         }
     }
 }
 //![4] Serial Write
 void MainWindow::onSerialWrite(){
     if (serial->isOpen() && !ui->comando->text().isEmpty()){
+        ui->consola->setTextColor("black");
         QString writeDatos = QString("\n[%1").arg(numComandoIntro)+"]: "+QString(ui->comando->text())+"\n";
         ui->consola->insertPlainText(writeDatos);
         QByteArray datosEnviar = ui->comando->text().toLocal8Bit();
         datosEnviar = datosEnviar+"\n";
-        serial->write(datosEnviar);//toLocal8Bit   toLatin1
-        //        qDebug()<<writeDatos;
+        serial->write(datosEnviar);
         ui->comando->clear();
         numComandoIntro ++;
+        modoComando = true;
+        QTimer::singleShot(200,this, SLOT(singleShotReset2()));
     }
 }
 //![5] Dial Minuto
@@ -364,19 +363,19 @@ void MainWindow::update_termocirculador(){
 }
 //![10] Conversion segundos de calentamiento a formato 00' 00"
 QString MainWindow::tiempoCalentamientoToString(float tiempoRestante){
-   float conversionTiempo = tiempoRestante * 5;  // TIEMPO FICTICIO
-   int min = int(conversionTiempo)/60;
-   int seg = int(conversionTiempo)%60;
-   QString stringMin = QString::number(min);
-   QString stringSeg = QString::number(seg);
-   if(min<10){
-       stringMin= "0" + stringMin;
-   }
-   if(seg<10){
-       stringSeg = "0" + stringSeg;
-   }
-   QString composicionTiempo = stringMin+"' "+stringSeg+"''";
-   return composicionTiempo;
+    float conversionTiempo = tiempoRestante * 5;  // TIEMPO FICTICIO
+    int min = int(conversionTiempo)/60;
+    int seg = int(conversionTiempo)%60;
+    QString stringMin = QString::number(min);
+    QString stringSeg = QString::number(seg);
+    if(min<10){
+        stringMin= "0" + stringMin;
+    }
+    if(seg<10){
+        stringSeg = "0" + stringSeg;
+    }
+    QString composicionTiempo = stringMin+"' "+stringSeg+"''";
+    return composicionTiempo;
 }
 //![11] Conversion minutos set ciclo a formato 0h 00'
 QString MainWindow::SET_tiempoCicloToString(int tiempoSet){
@@ -384,9 +383,9 @@ QString MainWindow::SET_tiempoCicloToString(int tiempoSet){
     int min = tiempoSet%60;
     QString stringHora = QString::number(hora);
     QString stringMin = QString::number(min);
-//    if(hora<10){
-//        stringHora= "0" + stringHora;
-//    }
+    //    if(hora<10){
+    //        stringHora= "0" + stringHora;
+    //    }
     if(min<10){
         stringMin = "0" + stringMin;
     }
@@ -410,4 +409,20 @@ QString MainWindow::tiempoCicloToString(float tiempo){
     }
     QString composicionTiempo = stringHora+"h "+stringMin+"' " + stringSeg+"''";
     return composicionTiempo;
+}
+//![13] singleShotReset
+void MainWindow::singleShotReset(){
+    dataSerial.clear();
+//    qDebug()<<"single shot";
+}
+
+//![14] singleShotReset2
+void MainWindow::singleShotReset2(){
+    modoComando = false;
+    dataSerial.clear();
+}
+
+//![15]
+void MainWindow::interpretarOrden(){
+
 }
